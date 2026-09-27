@@ -1,27 +1,68 @@
 {
-  "contract_version": "1.0",
+  "contract_version": "1.1",
   "service_id": "bakery-freshness",
   "service_name": "烘焙鲜度与补货决策",
-  "scope": "结合门店现烤、中央来货、保质窗口和分时销量形成补货依据。",
+  "scope": "把门店烤炉产能、中央工厂来货、配方批次、保质窗口、线上订单、分时销量纳入同一决策链，建议何时现烤、调拨、降价或停止制作，并展示所采用的数据与成本。",
   "actors": [
     "门店店长",
     "烘焙师",
     "中央工厂",
     "配送员",
+    "POS与分时销量源",
+    "线上订单系统",
     "区域负责人"
   ],
   "states": [
     "计划生产",
     "制作中",
     "可售",
+    "预订锁定",
+    "配送中",
     "临期",
     "停止销售",
+    "已降价",
+    "夜间清仓",
     "已报损"
+  ],
+  "event_types": [
+    "production_planned",
+    "production_cancelled",
+    "baked",
+    "received_from_plant",
+    "sale_recorded",
+    "reservation_placed",
+    "reservation_cancelled",
+    "delivery_dispatched",
+    "delivery_delivered",
+    "delivery_failed",
+    "return_restocked",
+    "transfer_out",
+    "transfer_in",
+    "store_closed",
+    "markdown_applied",
+    "night_clearance",
+    "batch_expired",
+    "stock_written_off",
+    "recipe_published"
+  ],
+  "decision_types": [
+    {"type": "bake", "label": "现烤补充"},
+    {"type": "transfer_in", "label": "调拨入店"},
+    {"type": "transfer_out", "label": "调出"},
+    {"type": "markdown", "label": "降价清货"},
+    {"type": "stop_production", "label": "停止制作"},
+    {"type": "block_restock", "label": "拦截重新上架"}
   ],
   "invariants": [
     "超过安全窗口的商品不得恢复为可售",
     "配方与过敏原标签随生产批次固定",
-    "重复收货或扫码不能增加可售数量"
+    "重复收货或扫码不能增加可售数量",
+    "配方调整后，营养与过敏原信息随批次生效，旧订单仍按购买时标签解释",
+    "预订取消、配送失败、临时闭店、夜间清仓均按发生时间修正可售量",
+    "超过安全窗口的商品不得因预测需求重新上架，只能降价或报损",
+    "事件按发生时间而非登记顺序修正可售量，晚到事件不重写已发布的建议",
+    "同一条建议可完整追溯：需求版本→实际执行→售罄时间→最终报损",
+    "建议必须展示所采用的数据版本与各项成本：原料、人工、烤炉机会成本、缺货机会损失、预期报损成本",
+    "重复提交相同事件标识的请求视为重放，不产生任何库存效果"
   ]
 }
-
